@@ -1,10 +1,13 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from numba import jit, njit, prange
+import time
 
 np.seterr(all='raise')
 
 
+@jit(parallel=True)
 def minimos_quadrados(xy, uv):
 	A = np.zeros([2 * xy.shape[0], 8])
 	L = np.zeros([2 * xy.shape[0], 1])
@@ -29,16 +32,86 @@ def minimos_quadrados(xy, uv):
 	return T
 
 
-print("Exemplo PDF")
-xy = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
-uv = np.array([[2, 1], [3, 5], [6, 6], [7, 2]])
-print(minimos_quadrados(xy, uv))
+# print("Exemplo PDF")
+# xy = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
+# uv = np.array([[2, 1], [3, 5], [6, 6], [7, 2]])
+# print(minimos_quadrados(xy, uv))
 
 print("Storm Trooper")
 xy = np.array([[32, 1074], [526, 107], [1410, 226], [1248, 1311]])
 uv = np.array([[264, 1142], [264, 264], [1076, 260], [1076, 1142]])
-T = minimos_quadrados(xy, uv)
-print(T)
+transformation = minimos_quadrados(xy, uv)
+print(transformation)
+
+tr = cv2.getPerspectiveTransform(np.float32(xy), np.float32(uv))
+print(tr)
+
+
+# from scipy import interpolate
+# x = np.arange(-5.01, 5.01, 0.25)
+# y = np.arange(-5.01, 5.01, 0.25)
+# xx, yy = np.meshgrid(x, y)
+# z = np.sin(xx**2+yy**2)
+# f = interpolate.interp2d(x, y, z, kind='cubic')
+# xnew = np.arange(-5.01, 5.01, 1e-2)
+# ynew = np.arange(-5.01, 5.01, 1e-2)
+# znew = f(xnew, ynew)
+# plt.plot(x, z[0, :], 'ro-', xnew, znew[0, :], 'b-')
+# plt.show()
+
+
+# @jit
+def transformar_coordenadas(img, t):
+	new_image_map = {}
+	minx, miny = img.shape[0], img.shape[1]
+	maxx, maxy = 0, 0
+	for i in prange(img.shape[0]):
+		for j in prange(img.shape[1]):
+			xy = np.array([i, j, 1])
+			uv = np.matmul(t, xy)
+			# if abs(uv[2] - 1) > 1e-5:
+			# 	print(uv)
+			uv = uv / uv[2]
+			uv[0], uv[1] = int(uv[0] + .5), int(uv[1] + .5)
+			minx = min(minx, uv[0])
+			maxx = max(maxx, uv[0])
+			miny = min(miny, uv[1])
+			maxy = max(maxy, uv[1])
+
+			new_image_map[int(uv[0]), int(uv[1])] = img[i, j]
+
+	minx, miny = int(minx), int(miny)
+	maxx, maxy = int(maxx), int(maxy)
+	final_img = np.zeros((maxx - minx + 1, maxy - miny + 1)) \
+		if len(img.shape) == 2 else np.zeros((maxx - minx + 1, maxy - miny + 1, img.shape[2]))
+
+	for k, v in new_image_map.items():
+		final_img[k[0] - minx, k[1] - miny] = v
+
+	return final_img
+
 
 file_name = "storm_trooper.jpg"
-storm_img = cv2.imread(file_name, 0)
+storm_img = cv2.imread(file_name)
+plt.imshow(storm_img, vmin=0, vmax=255)
+plt.show()
+print(storm_img.shape)
+
+dst = cv2.warpPerspective(storm_img, tr, (1448, 1456))
+plt.subplot(121), plt.imshow(storm_img), plt.title('Input')
+plt.subplot(122), plt.imshow(dst), plt.title('Output')
+plt.show()
+
+start = time.time()
+resp = transformar_coordenadas(storm_img, transformation)
+end = time.time()
+print(f"Elapsed time: {end - start:3}s, size: {resp.shape}")
+plt.imshow(resp, vmin=0, vmax=255)
+plt.show()
+
+# start = time.time()
+# resp = transformar_coordenadas(storm_img, np.linalg.inv(transformation))
+# end = time.time()
+# print(f"Elapsed time: {end - start:3}s, size: {resp.shape}")
+# plt.imshow(resp, vmin=0, vmax=255)
+# plt.show()
