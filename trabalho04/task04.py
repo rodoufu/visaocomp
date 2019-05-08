@@ -46,7 +46,6 @@ print(transformation)
 tr = cv2.getPerspectiveTransform(np.float32(xy), np.float32(uv))
 print(tr)
 
-
 # from scipy import interpolate
 # x = np.arange(-5.01, 5.01, 0.25)
 # y = np.arange(-5.01, 5.01, 0.25)
@@ -65,12 +64,11 @@ def transformar_coordenadas(img, t):
 	new_image_map = {}
 	minx, miny = img.shape[0], img.shape[1]
 	maxx, maxy = 0, 0
-	for i in prange(img.shape[0]):
-		for j in prange(img.shape[1]):
+	# t = np.linalg.inv(t)
+	for i in range(img.shape[0]):
+		for j in range(img.shape[1]):
 			xy = np.array([i, j, 1])
 			uv = np.matmul(t, xy)
-			# if abs(uv[2] - 1) > 1e-5:
-			# 	print(uv)
 			uv = uv / uv[2]
 			uv[0], uv[1] = int(uv[0] + .5), int(uv[1] + .5)
 			minx = min(minx, uv[0])
@@ -78,15 +76,21 @@ def transformar_coordenadas(img, t):
 			miny = min(miny, uv[1])
 			maxy = max(maxy, uv[1])
 
-			new_image_map[int(uv[0]), int(uv[1])] = img[i, j]
+			# uv[0] = (t[0, 0] * i + t[0, 1] * j + t[0, 2]) / (t[2, 0] * i + t[2, 1] * j + t[2, 2])
+			# uv[1] = (t[1, 0] * i + t[1, 1] * j + t[1, 2]) / (t[2, 0] * i + t[2, 1] * j + t[2, 2])
+
+			new_image_map[int(uv[0]), int(uv[1])] = (i, j)
 
 	minx, miny = int(minx), int(miny)
 	maxx, maxy = int(maxx), int(maxy)
 	final_img = np.zeros((maxx - minx + 1, maxy - miny + 1)) \
 		if len(img.shape) == 2 else np.zeros((maxx - minx + 1, maxy - miny + 1, img.shape[2]))
+	# final_img = np.zeros(img.shape)
 
 	for k, v in new_image_map.items():
-		final_img[k[0] - minx, k[1] - miny] = v
+		final_img[k[0] - minx, k[1] - miny] = img[v]
+		# if 0 <= k[0] < img.shape[0] and 0 <= k[1] < img.shape[1]:
+		# 	final_img[k] = img[v]
 
 	return final_img
 
