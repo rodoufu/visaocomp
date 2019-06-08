@@ -1,13 +1,13 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from numba import jit, njit, prange
 import time
+import math
+from enum import Enum
 
 np.seterr(all='raise')
 
 
-@jit(parallel=True)
 def minimos_quadrados(xy, uv):
 	A = np.zeros([2 * xy.shape[0], 8])
 	L = np.zeros([2 * xy.shape[0], 1])
@@ -32,90 +32,70 @@ def minimos_quadrados(xy, uv):
 	return T
 
 
-# print("Exemplo PDF")
-# xy = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
-# uv = np.array([[2, 1], [3, 5], [6, 6], [7, 2]])
-# print(minimos_quadrados(xy, uv))
+file_name = "storm_trooper.jpg"
+storm_img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+height, width = storm_img.shape
 
 print("Storm Trooper")
-xy = np.array([[32, 1074], [526, 107], [1410, 226], [1248, 1311]])
-uv = np.array([[264, 1142], [264, 264], [1076, 260], [1076, 1142]])
+xy = np.array([[107, 526], [226, 1410], [1311, 1248], [1074, 32]])
+uv = np.array([(0, 0), (0, width), (width, height), (height, 0)])
 transformation = minimos_quadrados(xy, uv)
 print(transformation)
 
-tr = cv2.getPerspectiveTransform(np.float32(xy), np.float32(uv))
-print(tr)
 
-# from scipy import interpolate
-# x = np.arange(-5.01, 5.01, 0.25)
-# y = np.arange(-5.01, 5.01, 0.25)
-# xx, yy = np.meshgrid(x, y)
-# z = np.sin(xx**2+yy**2)
-# f = interpolate.interp2d(x, y, z, kind='cubic')
-# xnew = np.arange(-5.01, 5.01, 1e-2)
-# ynew = np.arange(-5.01, 5.01, 1e-2)
-# znew = f(xnew, ynew)
-# plt.plot(x, z[0, :], 'ro-', xnew, znew[0, :], 'b-')
-# plt.show()
+class PointMethod(Enum):
+	NEAREST_NEIGHBOR = 1
+	NEIGHBORHOOD_AVG = 2
 
 
-# @jit
-def transformar_coordenadas(img, t):
-	new_image_map = {}
-	minx, miny = img.shape[0], img.shape[1]
-	maxx, maxy = 0, 0
-	# t = np.linalg.inv(t)
-	for i in range(img.shape[0]):
-		for j in range(img.shape[1]):
-			xy = np.array([i, j, 1])
-			uv = np.matmul(t, xy)
-			uv = uv / uv[2]
-			uv[0], uv[1] = int(uv[0] + .5), int(uv[1] + .5)
-			minx = min(minx, uv[0])
-			maxx = max(maxx, uv[0])
-			miny = min(miny, uv[1])
-			maxy = max(maxy, uv[1])
+def transformar_coordenadas(img, t, method=PointMethod.NEAREST_NEIGHBOR):
+	resp = np.zeros((height, width), np.uint8)
+	t = np.linalg.inv(t)
 
-			# uv[0] = (t[0, 0] * i + t[0, 1] * j + t[0, 2]) / (t[2, 0] * i + t[2, 1] * j + t[2, 2])
-			# uv[1] = (t[1, 0] * i + t[1, 1] * j + t[1, 2]) / (t[2, 0] * i + t[2, 1] * j + t[2, 2])
+	for x in range(height - 1):
+		for y in range(width - 1):
+			x_chapeu = np.dot(t, np.array([x, y, 1]))
+			x_chapeu /= x_chapeu[2]
 
-			new_image_map[int(uv[0]), int(uv[1])] = (i, j)
+			xv = [math.floor(x_chapeu[0]), math.ceil(x_chapeu[0])]
+			yv = [math.floor(x_chapeu[1]), math.floor(x_chapeu[1])]
+			points = [(i, j) for i in xv for j in yv]
+			dists = [math.hypot(x_chapeu[0] - x_chapeu[1], it[0] - it[1]) for it in points]
 
-	minx, miny = int(minx), int(miny)
-	maxx, maxy = int(maxx), int(maxy)
-	final_img = np.zeros((maxx - minx + 1, maxy - miny + 1)) \
-		if len(img.shape) == 2 else np.zeros((maxx - minx + 1, maxy - miny + 1, img.shape[2]))
-	# final_img = np.zeros(img.shape)
+			if method == PointMethod.NEAREST_NEIGHBOR:
+				idx = np.argmin(dists)
+				resp[x, y] = img[points[idx][0], points[idx][1]]
+			elif method == PointMethod.NEIGHBORHOOD_AVG:
+				value = 0
+				for i in range(len(points)):
+					value += img[points[i][0], points[i][1]] * dists[i]
+				resp[x, y] = np.uint8(value // sum(dists))
 
-	for k, v in new_image_map.items():
-		final_img[k[0] - minx, k[1] - miny] = img[v]
-		# if 0 <= k[0] < img.shape[0] and 0 <= k[1] < img.shape[1]:
-		# 	final_img[k] = img[v]
-
-	return final_img
+	return resp
 
 
-file_name = "storm_trooper.jpg"
-storm_img = cv2.imread(file_name)
-plt.imshow(storm_img, vmin=0, vmax=255)
+plt.imshow(storm_img, cmap='gray', vmin=0, vmax=255)
 plt.show()
 print(storm_img.shape)
 
-dst = cv2.warpPerspective(storm_img, tr, (1448, 1456))
-plt.subplot(121), plt.imshow(storm_img), plt.title('Input')
-plt.subplot(122), plt.imshow(dst), plt.title('Output')
-plt.show()
+
+def image_side_by_side(imgs, titles):
+	plt.subplot(121), plt.imshow(imgs[0], cmap='gray'), plt.title(titles[0])
+	plt.subplot(122), plt.imshow(imgs[1], cmap='gray'), plt.title(titles[1])
+	plt.show()
+
 
 start = time.time()
-resp = transformar_coordenadas(storm_img, transformation)
+resp = transformar_coordenadas(storm_img, transformation, PointMethod.NEAREST_NEIGHBOR)
 end = time.time()
 print(f"Elapsed time: {end - start:3}s, size: {resp.shape}")
-plt.imshow(resp, vmin=0, vmax=255)
-plt.show()
+image_side_by_side([storm_img, resp], ['Input', 'NEAREST_NEIGHBOR'])
 
-# start = time.time()
-# resp = transformar_coordenadas(storm_img, np.linalg.inv(transformation))
-# end = time.time()
-# print(f"Elapsed time: {end - start:3}s, size: {resp.shape}")
-# plt.imshow(resp, vmin=0, vmax=255)
-# plt.show()
+start = time.time()
+resp_avg = transformar_coordenadas(storm_img, transformation, PointMethod.NEIGHBORHOOD_AVG)
+end = time.time()
+print(f"Elapsed time: {end - start:3}s, size: {resp_avg.shape}")
+image_side_by_side([storm_img, resp_avg], ['Input', 'NEIGHBORHOOD_AVG'])
+
+image_side_by_side([resp, resp_avg], ['NEAREST_NEIGHBOR', 'NEIGHBORHOOD_AVG'])
+
