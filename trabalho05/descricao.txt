@@ -1,8 +1,13 @@
 Trabalho 5 - Transformada de Hough
 
-Faça um documento jupyter notebook que forneça, com base na transformada de Hough modelada para círculos, a contagem e a descrição (coordenadas dos centros e raio) dos discos grandes presentes na imagem do exemplo (do trabalho 3 - segmentação dos discos claros usando a transformada top-hat).
+Faça um documento jupyter notebook que forneça, com base na transformada de Hough modelada para círculos, a contagem e a descrição
+(coordenadas dos centros e raio) dos discos grandes presentes na imagem do exemplo
+(do trabalho 3 - segmentação dos discos claros usando a transformada top-hat).
 
 Procedimento sugerido:
-Use como base o resultado do trabalho 3. Inicialmente, subtraia o resultado do trabalho 3 da imagem original a fim de obter a segmentação dos discos. Em seguida, utilize um filtro para obter as bordas dos discos e binarize o resultado. Por fim, empregue a transformada de Hough para obter as informações desejadas.
+Use como base o resultado do trabalho 3.
+Inicialmente, subtraia o resultado do trabalho 3 da imagem original a fim de obter a segmentação dos discos.
+Em seguida, utilize um filtro para obter as bordas dos discos e binarize o resultado.
+Por fim, empregue a transformada de Hough para obter as informações desejadas.
 
 OBS.: Envie somente o arquivo jupyter notebook
