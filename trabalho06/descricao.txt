@@ -1,0 +1,32 @@
+Trabalho 6 - Transformada de Fourier e realce no domínio da frequência
+
+Faça as seguintes simulações no jupyther notebook e aproveite os recursos disponíveis para explicar os fundamentos e resultados obtidos
+
+1. Série de Fourier de função unidimensional
+A função triangular, representada pelo gráfico a seguir, é uma função periódica. Esta classe de funções pode ser representa através de uma série de Fourier.
+
+:
+
+A série de Fourier que representa esta função é dada pela seguinte equação:
+
+
+
+Varie o número de senóides para apresentar graficamente diferentes aproximações da função triangular.
+
+Referência: http://www.matematica.pucminas.br/profs/web_fabiano/calculo4/sf.pdf
+
+2. Prova enpírica da propriedade translação e mudança de fase
+2.1 - Crie duas imagens binárias contendo um mesmo objeto geométrico. A diferença entre as imagens é a translação em que o objeto aparece.
+2.2 - Calcule a o módulo da transformada de Fourier de cada uma das imagens
+2.3 - Faça a subtração entre estas imagens e a utilize para demostrar a propriedade
+Referência: Gonzalez e Woods Processamento digital de Imagens
+
+3. Filtragem de Fourier pegue uma fotografia de sua autoria.
+Execute a filtragem passa-baixa de Fourier desta imagem usando os filtros Butterworth e Ideal.
+
+Compare os resultados obtidos em termos dos fundamentos teóricos correspondentes. 
+
+Referência: Gonzalez e Woods Processamento digital de Imagens
+
+4. Filtros espaciais aproximados
+Utilizando a imagem e o filtro de Butterworth empregados no exercício anterior, obtenha filtros aproximados no domínio espacial de dimensões nxn . Para este valor de n calcule o somatório do erro quadrático da diferença entre os resultados obtidos pelo filtro exato e o aproximado. Repita este procedimento para diferentes valores de n e trace o gráfico n x SSE. Analise e explique os resultados obtidos. 
