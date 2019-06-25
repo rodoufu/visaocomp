@@ -1,0 +1,10 @@
+Trabalho 8 - Segmentação de Imagens
+Dada a imagem de bambu, envie um arquivo jupyter notebook que segmente somente as regiões correspondentes à esclerênquima. Seu programa deve, portanto, produzir um resultado semelhante ao a seguir:
+
+Resultado esperado
+
+ Explique a abordagem proposta utilizando os recursos de markup do jupyter.
+
+OBS.: Recomendação utilize a limiarização seguida de alguma medida de textura. Não pode ser utilizada a mesma abordagem utilizada pelo Otávio, portanto, nem o uso da variância como do desvio padrão são permitidos como medidas de textura. 
+
+Uma outra alternativa potencialmente interessante pode ser desenvolvida a partir do filtro TopHat. 
