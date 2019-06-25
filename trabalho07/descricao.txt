@@ -1,0 +1,13 @@
+Trabalho 7 - Fusão de imagens de satélite com a banda pancromática
+Faça a operação de  fusão com a banda pancromática para imagens do Satélite Landsat 7 ETM no jupyther notebook e aproveite os recursos disponíveis para explicar os fundamentos e resultados obtidos. 
+1. Baixe as bandas 1, 2, 3 e 8 usando o link  
+
+2. Recorte um trecho de 512 x 512 pixels contendo a mesma porção geográfica nas bandas 1, 2 e 3.
+
+3. Recorte o trecho equivalente na Banda 8. Lembre-se que o GRE (Ground resolution element) desta banda é de 15m. 
+
+4. Produza a fusão com a banda PAN conforme o diagrama a seguir:
+
+
+
+5. Compare com o composite não fusionado. Analise e explique o resultado.
