@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+sudo apt install virtualenv
+pip3 install virtualenv
+
 folder=$(pwd)
 echo ${folder}
 
@@ -8,8 +11,8 @@ echo ${folder}
 virtualenv -p python3 ./venv
 cd ./venv/bin
 source activate
-pip install numpy scipy matplotlib scikit-image scikit-learn ipython
-#pip install -r ${folder}/requirements.txt
+#pip install numpy scipy matplotlib scikit-image scikit-learn ipython
+pip install -r ${folder}/requirements.txt
 deactivate
 
 sudo apt-get install python-opencv
